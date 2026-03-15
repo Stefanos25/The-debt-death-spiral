@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Debt Death Spiral — Ray Dalio's Framework</title>
+<meta name="description" content="An interactive dashboard exploring Ray Dalio's warnings about the U.S. debt crisis and bond market dynamics.">
+<meta property="og:title" content="The Debt Death Spiral — Ray Dalio's Framework">
+<meta property="og:description" content="Interactive dashboard: U.S. debt dynamics, deficit projections, and scenario simulator.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #FAFAF8;
+  --surface: #F1EFE8;
+  --card: #FFFFFF;
+  --text: #1a1a18;
+  --text-secondary: #888780;
+  --border: rgba(0,0,0,0.1);
+  --accent: #D85A30;
+  --accent-light: #FAECE7;
+  --accent-dark: #712B13;
+  --teal: #1D9E75;
+  --teal-light: #E1F5EE;
+  --teal-dark: #085041;
+  --blue: #378ADD;
+  --blue-light: #E6F1FB;
+  --blue-dark: #0C447C;
+  --amber: #EF9F27;
+  --amber-light: #FAEEDA;
+  --amber-dark: #633806;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --red-dark: #791F1F;
+  --purple: #7F77DD;
+  --purple-light: #EEEDFE;
+  --purple-dark: #3C3489;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a18;
+    --surface: #2C2C2A;
+    --card: #333331;
+    --text: #E8E6DF;
+    --text-secondary: #9A9891;
+    --border: rgba(255,255,255,0.1);
+    --accent-light: #4A1B0C;
+    --accent-dark: #F0997B;
+    --teal-light: #04342C;
+    --teal-dark: #5DCAA5;
+    --blue-light: #042C53;
+    --blue-dark: #85B7EB;
+    --amber-light: #412402;
+    --amber-dark: #FAC775;
+    --red-light: #501313;
+    --red-dark: #F09595;
+    --purple-light: #26215C;
+    --purple-dark: #AFA9EC;
+  }
+}
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+.header {
+  padding: 2rem 0 1.5rem;
+  border-bottom: 2px solid var(--text);
+  margin-bottom: 2rem;
+}
+.header h1 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.header p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 2.5rem;
+}
+@media (max-width: 600px) {
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+.metric {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+.metric .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.metric .value {
+  font-size: 24px;
+  font-weight: 500;
+}
+.metric .sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.section {
+  margin-bottom: 3rem;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  border-bottom: 0.5px solid var(--border);
+  padding-bottom: 10px;
+}
+.section-head h2 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+.section-head span {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  margin-bottom: 10px;
+}
+.chart-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+.spiral-box {
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--card);
+}
+.spiral-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.spiral-step:last-child { margin-bottom: 0; }
+.spiral-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.spiral-step .txt {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.spiral-step .txt strong { font-weight: 500; }
+.sim-controls {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+.sim-controls label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sim-controls input[type="range"] {
+  width: 120px;
+  accent-color: var(--accent);
+}
+.sim-controls .val {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 44px;
+}
+.sim-note {
+  font-size: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+.footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.footer a { color: var(--accent); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>The debt death spiral</h1>
+  <p>Ray Dalio's framework for how countries go broke</p>
+</div>
+
+<div class="metrics">
+  <div class="metric">
+    <div class="label">National debt</div>
+    <div class="value" style="color: var(--accent);">$36.2T</div>
+    <div class="sub">123% of GDP</div>
+  </div>
+  <div class="metric">
+    <div class="label">Annual deficit</div>
+    <div class="value" style="color: var(--red);">~7% GDP</div>
+    <div class="sub">Dalio target: 3%</div>
+  </div>
+  <div class="metric">
+    <div class="label">Interest cost</div>
+    <div class="value" style="color: var(--amber);">$1T+/yr</div>
+    <div class="sub">3%+ of GDP</div>
+  </div>
+  <div class="metric">
+    <div class="label">2025 maturity wall</div>
+    <div class="value" style="color: var(--purple);">$7T</div>
+    <div class="sub">~30% of GDP</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Debt-to-GDP ratio</h2>
+    <span>1990 – 2034 projected</span>
+  </div>
+  <div class="chart-wrap"><canvas id="debtGdpChart"></canvas></div>
+  <p class="chart-note">The ratio soared from 104% in 2017 to 123% in 2024. Dalio warns we're approaching an inflection point where debt service costs crowd out productive spending — the beginning of the "big cycle" turning.</p>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Annual deficit as % of GDP</h2>
+    <span>Dalio's danger threshold at 3%</span>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background: var(--blue);"></span>Actual deficit</span>
+    <span><span class="dot" style="background: var(--red);"></span>Dalio's 3% target</span>
+  </div>
+  <div class="chart-wrap"><canvas id="deficitChart"></canvas></div>
+  <p class="chart-note">Dalio argues the deficit must come down to ~3% of GDP to avoid a crisis. The current 7% is more than double that threshold and projected to reach 9% by 2034 according to Moody's.</p>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Interest payments trajectory</h2>
+    <span>Billions USD</span>
+  </div>
+  <div class="chart-wrap"><canvas id="interestChart"></canvas></div>
+  <p class="chart-note">Annual interest on federal debt crossed $1 trillion in 2024 and could approach $2 trillion by 2028 if rates stay elevated — consuming an ever-larger share of government revenue and crowding out all other spending.</p>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>The death spiral mechanism</h2>
+    <span>Dalio's self-reinforcing loop</span>
+  </div>
+  <div class="two-col">
+    <div class="spiral-box">
+      <div class="spiral-step">
+        <div class="spiral-num" style="background: var(--accent-light); color: var(--accent-dark);">1</div>
+        <div class="txt"><strong>Rising deficits</strong> force the Treasury to issue more bonds to finance spending gaps</div>
+      </div>
+      <div class="spiral-step">
+        <div class="spiral-num" style="background: var(--amber-light); color: var(--amber-dark);">2</div>
+        <div class="txt"><strong>Bond oversupply</strong> overwhelms demand; investors demand higher yields as compensation</div>
+      </div>
+      <div class="spiral-step">
+        <div class="spiral-num" style="background: var(--red-light); color: var(--red-dark);">3</div>
+        <div class="txt"><strong>Rising yields</strong> increase the cost of servicing existing debt, widening the deficit further</div>
+      </div>
+    </div>
+    <div class="spiral-box">
+      <div class="spiral-step">
+        <div class="spiral-num" style="background: var(--purple-light); color: var(--purple-dark);">4</div>
+        <div class="txt"><strong>Credit risk rises</strong> as ratings agencies and foreign buyers reassess U.S. creditworthiness</div>
+      </div>
+      <div class="spiral-step">
+        <div class="spiral-num" style="background: var(--teal-light); color: var(--teal-dark);">5</div>
+        <div class="txt"><strong>Capital flight</strong> — bonds sell off, dollar weakens, gold rises. Classic warning signals Dalio tracks</div>
+      </div>
+      <div class="spiral-step">
+        <div class="spiral-num" style="background: var(--blue-light); color: var(--blue-dark);">6</div>
+        <div class="txt"><strong>Fed prints money</strong> to backstop the market, debasing the currency and eroding real returns for bondholders</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Scenario simulator</h2>
+    <span>Project debt-to-GDP through 2035</span>
+  </div>
+  <div class="sim-controls">
+    <label>Deficit % GDP</label>
+    <input type="range" id="defSlider" min="2" max="10" step="0.5" value="7">
+    <span class="val" id="defVal">7.0%</span>
+    <label style="margin-left: 8px;">Avg yield</label>
+    <input type="range" id="yieldSlider" min="2" max="7" step="0.25" value="4.5">
+    <span class="val" id="yieldVal">4.5%</span>
+    <label style="margin-left: 8px;">GDP growth</label>
+    <input type="range" id="growthSlider" min="0" max="5" step="0.25" value="2.5">
+    <span class="val" id="growthVal">2.5%</span>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background: var(--accent);"></span>Projected debt/GDP</span>
+    <span><span class="dot" style="background: var(--red); opacity: 0.3;"></span>Danger zone (>150%)</span>
+  </div>
+  <div class="chart-wrap" style="height: 300px;"><canvas id="simChart"></canvas></div>
+  <div class="sim-note" id="simNote" style="background: var(--surface); color: var(--text-secondary);">
+    Adjust the sliders to explore how deficit spending, interest rates, and growth interact. Try Dalio's prescription: cut the deficit to 3% and see the trajectory change.
+  </div>
+</div>
+
+<div class="footer">
+  <p>Data sources: U.S. Treasury, CBO, Moody's, Federal Reserve. Projections are illustrative estimates based on publicly available forecasts. The scenario simulator uses a simplified model for educational purposes.</p>
+  <p style="margin-top: 8px;">Framework based on Ray Dalio's <em>How Countries Go Broke: The Big Cycle</em> (2025). Dashboard created for educational and editorial use.</p>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const tickColor = isDark ? '#9A9891' : '#888780';
+const accentHex = '#D85A30';
+const blueHex = '#378ADD';
+const amberHex = '#EF9F27';
+const redHex = '#E24B4A';
+
+const baseX = { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 10 }, color: tickColor } };
+const baseY = { grid: { color: gridColor }, ticks: { font: { family: 'DM Mono', size: 10 }, color: tickColor }, border: { display: false } };
+
+// Debt-to-GDP
+const debtYears = ['1990','1995','2000','2005','2008','2010','2012','2014','2016','2017','2018','2019','2020','2021','2022','2023','2024','2026P','2028P','2030P','2034P'];
+const debtData = [54,65,55,61,68,91,100,103,105,104,105,107,127,122,120,120,123,128,135,142,160];
+
+new Chart(document.getElementById('debtGdpChart'), {
+  type: 'line',
+  data: {
+    labels: debtYears,
+    datasets: [{
+      data: debtData,
+      borderColor: accentHex,
+      backgroundColor: isDark ? 'rgba(216,90,48,0.12)' : 'rgba(216,90,48,0.08)',
+      fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 5, borderWidth: 2.5
+    },{
+      data: debtYears.map(() => 100),
+      borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
+      borderDash: [4,4], borderWidth: 1, pointRadius: 0, fill: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.datasetIndex === 0 ? c.parsed.y + '% of GDP' : '100% reference line' } } },
+    scales: { x: baseX, y: { ...baseY, ticks: { ...baseY.ticks, callback: v => v + '%' }, min: 40, max: 170 } }
+  }
+});
+
+// Deficit
+const defYears = ['2000','2002','2004','2006','2008','2010','2012','2014','2016','2018','2020','2021','2022','2023','2024','2026P','2030P','2034P'];
+const defData = [-2.3,1.5,3.5,1.8,3.1,8.6,6.7,2.8,3.1,3.8,14.7,12.1,5.4,6.2,6.4,7.0,8.0,9.0];
+
+new Chart(document.getElementById('deficitChart'), {
+  type: 'bar',
+  data: {
+    labels: defYears,
+    datasets: [{
+      data: defData,
+      backgroundColor: defData.map(d => d > 3 ? (isDark ? 'rgba(54,138,221,0.6)' : 'rgba(54,138,221,0.7)') : (isDark ? 'rgba(54,138,221,0.25)' : 'rgba(54,138,221,0.3)')),
+      borderRadius: 3
+    },{
+      type: 'line', data: defYears.map(() => 3),
+      borderColor: redHex, borderDash: [6,3], borderWidth: 2, pointRadius: 0, fill: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.datasetIndex === 0 ? c.parsed.y.toFixed(1) + '% of GDP' : 'Dalio target: 3%' } } },
+    scales: { x: { ...baseX, ticks: { ...baseX.ticks, autoSkip: false, maxRotation: 45 } }, y: { ...baseY, ticks: { ...baseY.ticks, callback: v => v + '%' }, min: -4, max: 16 } }
+  }
+});
+
+// Interest payments
+const intYears = ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025E','2026E','2027E','2028E'];
+const intData = [402,432,458,523,574,522,562,717,879,1050,1150,1350,1550,1800];
+
+new Chart(document.getElementById('interestChart'), {
+  type: 'bar',
+  data: {
+    labels: intYears,
+    datasets: [{
+      data: intData,
+      backgroundColor: intData.map(d => d >= 1000 ? (isDark ? 'rgba(239,159,39,0.7)' : 'rgba(239,159,39,0.8)') : (isDark ? 'rgba(239,159,39,0.3)' : 'rgba(239,159,39,0.4)')),
+      borderRadius: 3
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => '$' + c.parsed.y + 'B' } } },
+    scales: { x: { ...baseX, ticks: { ...baseX.ticks, autoSkip: false, maxRotation: 45 } }, y: { ...baseY, ticks: { ...baseY.ticks, callback: v => '$' + v + 'B' }, min: 0, max: 2000 } }
+  }
+});
+
+// Simulator
+let simChart;
+function buildSim() {
+  const defPct = parseFloat(document.getElementById('defSlider').value);
+  const yieldPct = parseFloat(document.getElementById('yieldSlider').value);
+  const growthPct = parseFloat(document.getElementById('growthSlider').value);
+  document.getElementById('defVal').textContent = defPct.toFixed(1) + '%';
+  document.getElementById('yieldVal').textContent = yieldPct.toFixed(2) + '%';
+  document.getElementById('growthVal').textContent = growthPct.toFixed(2) + '%';
+
+  const years = [], ratios = [];
+  let debt = 36.2, gdp = 29.0;
+  for (let y = 2025; y <= 2035; y++) {
+    years.push(String(y));
+    ratios.push(Math.round((debt / gdp) * 100));
+    debt += gdp * (defPct / 100) + debt * (yieldPct / 100) * 0.3;
+    gdp *= (1 + growthPct / 100);
+  }
+
+  const note = document.getElementById('simNote');
+  const fin = ratios[ratios.length - 1];
+  if (fin > 200) { note.style.background = isDark ? '#501313' : '#FCEBEB'; note.style.color = isDark ? '#F09595' : '#791F1F'; note.textContent = 'Debt-to-GDP reaches ' + fin + '% by 2035 \u2014 deep into crisis territory. This is Dalio\u2019s death spiral in action.'; }
+  else if (fin > 150) { note.style.background = isDark ? '#412402' : '#FAEEDA'; note.style.color = isDark ? '#FAC775' : '#633806'; note.textContent = 'Debt-to-GDP reaches ' + fin + '% by 2035 \u2014 entering the danger zone where bond market stress becomes likely.'; }
+  else if (fin > 120) { note.style.background = isDark ? '#042C53' : '#E6F1FB'; note.style.color = isDark ? '#85B7EB' : '#0C447C'; note.textContent = 'Debt-to-GDP stays around ' + fin + '% by 2035 \u2014 elevated but manageable with sustained fiscal discipline.'; }
+  else { note.style.background = isDark ? '#04342C' : '#E1F5EE'; note.style.color = isDark ? '#5DCAA5' : '#085041'; note.textContent = 'Debt-to-GDP falls to ' + fin + '% by 2035 \u2014 a healthier trajectory. This requires the deficit cuts Dalio prescribes.'; }
+
+  if (simChart) simChart.destroy();
+  simChart = new Chart(document.getElementById('simChart'), {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [{
+        data: ratios, borderColor: accentHex,
+        backgroundColor: isDark ? 'rgba(216,90,48,0.15)' : 'rgba(216,90,48,0.1)',
+        fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: accentHex, borderWidth: 2.5
+      },{
+        data: years.map(() => 150),
+        borderColor: isDark ? 'rgba(226,75,74,0.25)' : 'rgba(226,75,74,0.3)',
+        borderDash: [4,4], borderWidth: 1, pointRadius: 0, fill: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.datasetIndex === 0 ? c.parsed.y + '% of GDP' : '' } } },
+      scales: { x: baseX, y: { ...baseY, ticks: { ...baseY.ticks, callback: v => v + '%' }, min: 80, max: 300 } }
+    }
+  });
+}
+
+document.getElementById('defSlider').addEventListener('input', buildSim);
+document.getElementById('yieldSlider').addEventListener('input', buildSim);
+document.getElementById('growthSlider').addEventListener('input', buildSim);
+buildSim();
+</script>
+</body>
+</html>
